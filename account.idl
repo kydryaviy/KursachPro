@@ -1,0 +1,19 @@
+enum Currency
+{
+	UAH,
+	RUB,
+	USD
+};
+interface Account  	//объявление интерфейса класса Account
+{
+    void deposit( in float amount ); //объявление прототипов методов
+    void withdraw( in float amount ); //спецификатор in – передача входных параметров по значению
+    float balance(); //можно использовать out для обозначения выходных аргументов по указателю
+	void login(in string card, in unsigned short pin);
+	void send(in string card);
+	void convert(in Currency currency); 
+};
+interface Bank  //объявление интерфейса класса Account
+{
+    Account create (in string card, in unsigned short pin); //метод, которому будут возвращены клиентские объекты
+};

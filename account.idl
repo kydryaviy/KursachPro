@@ -1,10 +1,11 @@
 interface Account
 {
-    void deposit( in float amount );
-    void withdraw( in float amount );
-    float balance();
-	boolean login(in string cardNum, in unsigned short pin);
-	void send(in string cardNum);
+    void deposit (in float amount);
+    void withdraw (in float amount);
+    float balance ();
+	boolean login (in unsigned short pin);
+	void send (in string cardNum);
+	string getCardNum ();
 };
 interface Bank
 {

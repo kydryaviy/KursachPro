@@ -11,24 +11,23 @@ class Account_impl :
 virtual public POA_Account /* класс, сгенерированый из idl-файла */
 {
 public:
-  Account_impl (char*, CORBA::UShort, CORBA::Float, char*);
+  Account_impl (char*, CORBA::UShort, CORBA::Long);
 	~Account_impl ();
 
-  void deposit (CORBA::Float, char*);
-  void withdraw (CORBA::Float, char*);
-  CORBA::Float balance () const;
+  void deposit (CORBA::Long);
+  void withdraw (CORBA::Long);
+  CORBA::Long balance () const;
 	CORBA::Boolean login (char*, CORBA::UShort) const;
 	char* getCardNum ();
 
 private:
-  CORBA::Float balance;
+  CORBA::Long balance;
 	char* cardNum
 	CORBA::UShort pin;
-	char* bankName
 };
 
 /* конструктор */
-Account_impl::Account_impl (char* _cardNum, CORBA::UShort _pin, CORBA::Float _balance, char* _bankName)
+Account_impl::Account_impl (char* _cardNum, CORBA::UShort _pin, CORBA::Long _balance)
 {
 	balance = _balance;
 	cardNum = new char[12];
@@ -43,20 +42,18 @@ Account_impl::~Account_impl ()
 }
 
 /* функция внесения депозита */ 
-void Account_impl::deposit (CORBA::Float amount, char* _bankName)
+void Account_impl::deposit (CORBA::Long amount)
 {
-	float multiplier = (bankName == _bankName)?1:0.95f;
-  balance += amount * multiplier;
+  balance += amount;
 }
 
 /* функция снятия наличных */ 
-void Account_impl::withdraw (CORBA::Float amount, char* _bankName)
+void Account_impl::withdraw (CORBA::Long amount)
 {
-	float multiplier = (bankName == _bankName)?1:0.95f;
-  balance -= amount * multiplier;
+  balance -= amount;
 }
 
-CORBA::Float Account_impl::balance ()
+CORBA::Long Account_impl::balance ()
 {
   return balance;
 }
@@ -81,7 +78,7 @@ public:
 	~Bank_impl ();
 
   Account_ptr getAccount (char*);
-	void createAccount (char*, CORBA::UShort, CORBA::Float);
+	void createAccount (char*, CORBA::UShort, CORBA::Long);
 private:
 	char* bankName;
   vector<Account_ptr> accounts;
@@ -109,11 +106,11 @@ Account_ptr Bank_impl::getAccount (char* cardNum)
 	return nullptr;
 }
 
-void createAccount(char cardNum, CORBA::UShort pin, CORBA::Float balance)
+void Bank_impl::createAccount(char cardNum, CORBA::UShort pin, CORBA::Long balance)
 {
 
   /* создание нового объекта Account, удалить который невозможно*/
-  Account_impl * ai = new Account_impl(cardNum, pin, balance, bankName);
+  Account_impl * ai = new Account_impl(cardNum, pin, balance);
 
 /*получить ссылку на новый объект используя метод _this() -  активизация службы подсчёта ссылок для этого объекта */
   Account_ptr aref = ai->_this ();

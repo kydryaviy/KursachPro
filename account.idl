@@ -1,8 +1,8 @@
 interface Account
 {
     void deposit (in long amount);
-    void withdraw (in long amount, in string bankName);
-    long balance ();
+    void withdraw (in long amount);
+    long getBalance ();
 	boolean login (in unsigned short pin);
 	string getCardNum ();
 };

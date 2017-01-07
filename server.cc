@@ -11,29 +11,28 @@ class Account_impl :
 virtual public POA_Account /* класс, сгенерированый из idl-файла */
 {
 public:
-  Account_impl (char*, CORBA::UShort, CORBA::Long);
+  Account_impl (const char*, CORBA::UShort, CORBA::Long);
 	~Account_impl ();
 
   void deposit (CORBA::Long);
   void withdraw (CORBA::Long);
-  CORBA::Long balance () const;
-	CORBA::Boolean login (char*, CORBA::UShort) const;
+  CORBA::Long getBalance ();
+	CORBA::Boolean login (CORBA::UShort);
 	char* getCardNum ();
 
 private:
   CORBA::Long balance;
-	char* cardNum
+	char* cardNum;
 	CORBA::UShort pin;
 };
 
 /* конструктор */
-Account_impl::Account_impl (char* _cardNum, CORBA::UShort _pin, CORBA::Long _balance)
+Account_impl::Account_impl (const char* _cardNum, CORBA::UShort _pin, CORBA::Long _balance)
 {
 	balance = _balance;
 	cardNum = new char[12];
-	cardNum = _cardNum;
+	cardNum = (char*)_cardNum;
 	pin = _pin;
-	bankName = _bankName;
 }
 
 Account_impl::~Account_impl ()
@@ -53,7 +52,7 @@ void Account_impl::withdraw (CORBA::Long amount)
   balance -= amount;
 }
 
-CORBA::Long Account_impl::balance ()
+CORBA::Long Account_impl::getBalance ()
 {
   return balance;
 }
@@ -74,22 +73,22 @@ char* Account_impl::getCardNum ()
 class Bank_impl : virtual public POA_Bank
 {
 public:
-	Bank_impl (char*);
+	Bank_impl (const char*);
 	~Bank_impl ();
 
-  Account_ptr getAccount (char*);
-	void createAccount (char*, CORBA::UShort, CORBA::Long);
+  Account_ptr getAccount (const char*);
+	void createAccount (const char*, CORBA::UShort, CORBA::Long);
 	char* getName ();
 private:
 	char* bankName;
   vector<Account_ptr> accounts;
 };
 
-Bank_impl::Bank_impl (char* _bankName)
+Bank_impl::Bank_impl (const char* _bankName)
 {
 	int length = strlen(_bankName);
 	bankName = new char[length];
-	bankName = _bankName;
+	bankName = (char*)_bankName;
 }
 
 Bank_impl::~Bank_impl ()
@@ -97,17 +96,18 @@ Bank_impl::~Bank_impl ()
 	delete bankName;
 }
 
-Account_ptr Bank_impl::getAccount (char* cardNum)
+Account_ptr Bank_impl::getAccount (const char* cardNum)
 {
-	for_each(accounts.begin(),accounts.end(),[](Account_ptr acc)
+	Account_ptr account = nullptr;
+	for_each(accounts.begin(),accounts.end(),[cardNum, &account](Account_ptr acc)
 	{
 		if (!strcmp(acc->getCardNum(), cardNum))
-			return acc; 
+			account = acc; 
 	});
-	return nullptr;
+	return account;
 }
 
-void Bank_impl::createAccount(char cardNum, CORBA::UShort pin, CORBA::Long balance)
+void Bank_impl::createAccount(const char* cardNum, CORBA::UShort pin, CORBA::Long balance)
 {
 
   /* создание нового объекта Account, удалить который невозможно*/
@@ -137,14 +137,16 @@ int main (int argc, char *argv[])
   PortableServer::POAManager_var mgr = poa->the_POAManager();
 
 	cout << "Input bank name" << endl;
-	char* name = new name[30];
-	cin >> name;
+	char* bankName = new char[30];
+	cin >> bankName;
   /* создание объекта Bank */
-  Bank_impl * micocash = new Bank_impl(name);
+
+   Bank_impl *micocash = new Bank_impl(bankName);
 
   /* активация данного объекта */
   PortableServer::ObjectId_var oid = poa->activate_object (micocash);
   CORBA::Object_var ref = poa->id_to_reference (oid.in());
+
 
   /* получение ссылки на Службу Именования */
   CORBA::Object_var nsobj = orb->resolve_initial_references ("NameService");
@@ -176,7 +178,7 @@ int main (int argc, char *argv[])
   /* выключение */
   poa->destroy (TRUE, TRUE);
   delete micocash;
-	delete name;
+	delete bankName;
 
   return 0;
 }

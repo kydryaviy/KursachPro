@@ -4,7 +4,7 @@ interface Account
     void withdraw (in float amount);
     float balance ();
 	boolean login (in unsigned short pin);
-	void send (in string cardNum);
+	void send (in Account acc, in boolean doYouPay);
 	string getCardNum ();
 };
 interface Bank

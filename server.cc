@@ -18,6 +18,7 @@ public:
   CORBA::Float balance () const;
 	CORBA::Boolean login (char*, CORBA::UShort) const;
 	void send (char*);
+	char* getCardNum () const;
 
 private:
   CORBA::Float balance;
@@ -54,12 +55,13 @@ CORBA::Float Account_impl::balance ()
 {
   return bal;
 }
-CORBA::Boolean login (char* cardNum, CORBA::UShort pin)
+CORBA::Boolean login (CORBA::UShort _pin)
 {
-	regex reg("^[0-9]{12}$");
-	if (!std::regex_match(cardNum, reg))
-		return false;
+  if (pin == _pin)
+		return true;
+	return false;
 }
+
 
 /* реализация интерфейса Bank */
 class Bank_impl : virtual public POA_Bank

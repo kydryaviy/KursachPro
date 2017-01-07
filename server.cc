@@ -13,8 +13,8 @@ public:
   Account_impl (char*, CORBA::UShort, CORBA::Float, char*);
 	~Account_impl ();
 
-  void deposit (CORBA::Float);
-  void withdraw (CORBA::Float);
+  void deposit (CORBA::Float, char*);
+  void withdraw (CORBA::Float, char*);
   CORBA::Float balance () const;
 	CORBA::Boolean login (char*, CORBA::UShort) const;
 
@@ -41,20 +41,24 @@ Account_impl::~Account_impl ()
 }
 
 /* функция внесения депозита */ 
-void Account_impl::deposit (CORBA::Float amount)
+void Account_impl::deposit (CORBA::Float amount, char* _bankName)
 {
-  balance += amount;
+	float multiplier = (bankName == _bankName)?1:0.95f;
+  balance += amount * multiplier;
 }
 
 /* функция снятия наличных */ 
-void Account_impl::withdraw (CORBA::Float amount)
+void Account_impl::withdraw (CORBA::Float amount, char* _bankName)
 {
-  balance -= amount;
+	float multiplier = (bankName == _bankName)?1:0.95f;
+  balance -= amount * multiplier;
 }
+
 CORBA::Float Account_impl::balance ()
 {
-  return bal;
+  return balance;
 }
+
 CORBA::Boolean login (CORBA::UShort _pin)
 {
   if (pin == _pin)

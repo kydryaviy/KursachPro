@@ -8,6 +8,5 @@ interface Account
 };
 interface Bank
 {
-    Account create (in string cardNum, in unsigned short pin, 
-					float balance);
+    Account create (in string cardNum, in unsigned short pin, in float balance);
 };

@@ -3,6 +3,9 @@
 #include "account.h"
 #include <vector>
 #include <algorithm>
+#include <string>
+#include <sstream>
+#include <fstream>
 
 using namespace std;
 
@@ -126,6 +129,19 @@ char* Bank_impl::getName ()
 	return bankName;
 }
 
+void addAccIfThisBank(Bank_impl* bank, string data)
+{
+	vector<string> v;
+	istringstream f(data);
+	string s;
+	while (getline(f,s,' '))
+	{
+		v.push_back(s);
+	}
+	if (!strcmp(bank->getName(),v[0].c_str()))
+		bank->createAccount(v[1].c_str(),(unsigned short) strtoul(v[2].c_str(), NULL, 0),(long)v[3].c_str());
+}
+
 int main (int argc, char *argv[])
 {
   /* инициализация ORB, получение Root POA объекта и регистрация */  
@@ -142,6 +158,23 @@ int main (int argc, char *argv[])
   /* создание объекта Bank */
 
    Bank_impl *micocash = new Bank_impl(bankName);
+
+
+
+	vector<string> stringsFromFile;
+	string str;
+	ifstream file("accounts.txt");
+	while (getline(file, str))
+	{
+		stringsFromFile.push_back(str);
+	}
+	for_each(stringsFromFile.begin(),stringsFromFile.end(),[&micocash](string s)
+	{
+		addAccIfThisBank(micocash, s);
+	});
+
+
+
 
   /* активация данного объекта */
   PortableServer::ObjectId_var oid = poa->activate_object (micocash);

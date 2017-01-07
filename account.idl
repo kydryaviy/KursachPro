@@ -10,4 +10,5 @@ interface Bank
 {
 	Account getAccount (in string cardNum);
     void createAccount (in string cardNum, in unsigned short pin, in long balance);
+	string getName ();
 };

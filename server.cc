@@ -79,6 +79,7 @@ public:
 
   Account_ptr getAccount (char*);
 	void createAccount (char*, CORBA::UShort, CORBA::Long);
+	char* getName ();
 private:
 	char* bankName;
   vector<Account_ptr> accounts;
@@ -120,6 +121,11 @@ void Bank_impl::createAccount(char cardNum, CORBA::UShort pin, CORBA::Long balan
   accounts.push_back(aref);
 }
 
+char* Bank_impl::getName ()
+{
+	return bankName;
+}
+
 int main (int argc, char *argv[])
 {
   /* инициализация ORB, получение Root POA объекта и регистрация */  
@@ -130,8 +136,11 @@ int main (int argc, char *argv[])
   PortableServer::POA_var poa = PortableServer::POA::_narrow (poaobj);
   PortableServer::POAManager_var mgr = poa->the_POAManager();
 
+	cout << "Input bank name" << endl;
+	char* name = new name[30];
+	cin >> name;
   /* создание объекта Bank */
-  Bank_impl * micocash = new Bank_impl;
+  Bank_impl * micocash = new Bank_impl(name);
 
   /* активация данного объекта */
   PortableServer::ObjectId_var oid = poa->activate_object (micocash);
@@ -167,6 +176,7 @@ int main (int argc, char *argv[])
   /* выключение */
   poa->destroy (TRUE, TRUE);
   delete micocash;
+	delete name;
 
   return 0;
 }

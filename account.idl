@@ -1,7 +1,7 @@
 interface Account
 {
-    void deposit (in float amount);
-    void withdraw (in float amount);
+    void deposit (in float amount, in string bankName);
+    void withdraw (in float amount, in string bankName);
     float balance ();
 	boolean login (in unsigned short pin);
 };

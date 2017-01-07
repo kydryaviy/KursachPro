@@ -4,8 +4,10 @@ interface Account
     void withdraw (in float amount, in string bankName);
     float balance ();
 	boolean login (in unsigned short pin);
+	string getCardNum ();
 };
 interface Bank
 {
-    Account create (in string cardNum, in unsigned short pin, in float balance, in string bankName);
+	Account getAccount (in string cardNum);
+    void createAccount (in string cardNum, in unsigned short pin, in float balance);
 };

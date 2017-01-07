@@ -1,7 +1,8 @@
 #include <CORBA.h>
 #include <coss/CosNaming.h>
-#include <regex>
 #include "account.h"
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -17,6 +18,7 @@ public:
   void withdraw (CORBA::Float, char*);
   CORBA::Float balance () const;
 	CORBA::Boolean login (char*, CORBA::UShort) const;
+	char* getCardNum ();
 
 private:
   CORBA::Float balance;
@@ -59,32 +61,66 @@ CORBA::Float Account_impl::balance ()
   return balance;
 }
 
-CORBA::Boolean login (CORBA::UShort _pin)
+CORBA::Boolean Account_impl::login (CORBA::UShort _pin)
 {
   if (pin == _pin)
 		return true;
 	return false;
 }
 
+char* Account_impl::getCardNum ()
+{
+	return cardNum;
+}
+
 /* реализация интерфейса Bank */
 class Bank_impl : virtual public POA_Bank
 {
 public:
-  Account_ptr create ();
+	Bank_impl (char*);
+	~Bank_impl ();
+
+  Account_ptr getAccount (char*);
+	void createAccount (char*, CORBA::UShort, CORBA::Float);
+private:
+	char* bankName;
+  vector<Account_ptr> accounts;
 };
 
-Account_ptr Bank_impl::create ()
+Bank_impl::Bank_impl (char* _bankName)
+{
+	int length = strlen(_bankName);
+	bankName = new char[length];
+	bankName = _bankName;
+}
+
+Bank_impl::~Bank_impl ()
+{
+	delete bankName;
+}
+
+Account_ptr Bank_impl::getAccount (char* cardNum)
+{
+	for_each(accounts.begin(),accounts.end(),[](Account_ptr acc)
+	{
+		if (!strcmp(acc->getCardNum(), cardNum))
+			return acc; 
+	});
+	return nullptr;
+}
+
+void createAccount(char cardNum, CORBA::UShort pin, CORBA::Float balance)
 {
 
   /* создание нового объекта Account, удалить который невозможно*/
-  Account_impl * ai = new Account_impl;
+  Account_impl * ai = new Account_impl(cardNum, pin, balance, bankName);
 
 /*получить ссылку на новый объект используя метод _this() -  активизация службы подсчёта ссылок для этого объекта */
   Account_ptr aref = ai->_this ();
   assert (!CORBA::is_nil (aref));
 
   /* возврат ссылки на объект */
-  return aref;
+  accounts.push_back(aref);
 }
 
 int main (int argc, char *argv[])

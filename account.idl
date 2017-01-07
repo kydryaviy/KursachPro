@@ -1,12 +1,13 @@
-interface Account  	//объявление интерфейса класса Account
+interface Account
 {
-    void deposit( in float amount ); //объявление прототипов методов
-    void withdraw( in float amount ); //спецификатор in – передача входных параметров по значению
-    float balance(); //можно использовать out для обозначения выходных аргументов по указателю
-	void login(in string card, in unsigned short pin);
-	void send(in string card);
+    void deposit( in float amount );
+    void withdraw( in float amount );
+    float balance();
+	void login(in string cardNum, in unsigned short pin);
+	void send(in string cardNum);
 };
-interface Bank  //объявление интерфейса класса Account
+interface Bank
 {
-    Account create (in string card, in unsigned short pin); //метод, которому будут возвращены клиентские объекты
+    Account create (in string cardNum, in unsigned short pin, 
+					float balance);
 };

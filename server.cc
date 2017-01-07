@@ -4,14 +4,12 @@
 
 using namespace std;
 
-
-
 /* реализация интерфейса Account (описание его функциональности) */
 class Account_impl : 
 virtual public POA_Account /* класс, сгенерированый из idl-файла */
 {
 public:
-  Account_impl (char*, CORBA::UShort);
+  Account_impl (char*, CORBA::UShort, CORBA::Float);
 
   void deposit (CORBA::Float);
   void withdraw (CORBA::Float);
@@ -21,6 +19,8 @@ public:
 
 private:
   CORBA::Float bal;
+	char* cardNum
+	unsigned short pin;
 };
 
 /* конструктор */

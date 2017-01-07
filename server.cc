@@ -10,29 +10,29 @@ class Account_impl :
 virtual public POA_Account /* класс, сгенерированый из idl-файла */
 {
 public:
-  Account_impl (char*, CORBA::UShort, CORBA::Float);
+  Account_impl (char*, CORBA::UShort, CORBA::Float, char*);
 	~Account_impl ();
 
   void deposit (CORBA::Float);
   void withdraw (CORBA::Float);
   CORBA::Float balance () const;
 	CORBA::Boolean login (char*, CORBA::UShort) const;
-	void send (char*);
-	char* getCardNum () const;
 
 private:
   CORBA::Float balance;
 	char* cardNum
 	CORBA::UShort pin;
+	char* bankName
 };
 
 /* конструктор */
-Account_impl::Account_impl (char* _cardNum, CORBA::UShort _pin, CORBA::Float _balance)
+Account_impl::Account_impl (char* _cardNum, CORBA::UShort _pin, CORBA::Float _balance, char* _bankName)
 {
 	balance = _balance;
 	cardNum = new char[12];
 	cardNum = _cardNum;
 	pin = _pin;
+	bankName = _bankName;
 }
 
 Account_impl::~Account_impl ()
@@ -61,7 +61,6 @@ CORBA::Boolean login (CORBA::UShort _pin)
 		return true;
 	return false;
 }
-
 
 /* реализация интерфейса Bank */
 class Bank_impl : virtual public POA_Bank

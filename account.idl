@@ -3,7 +3,7 @@ interface Account
     void deposit( in float amount );
     void withdraw( in float amount );
     float balance();
-	void login(in string cardNum, in unsigned short pin);
+	boolean login(in string cardNum, in unsigned short pin);
 	void send(in string cardNum);
 };
 interface Bank

@@ -1,5 +1,6 @@
 #include <CORBA.h>
 #include <coss/CosNaming.h>
+#include <regex>
 #include "account.h"
 
 using namespace std;
@@ -10,39 +11,54 @@ virtual public POA_Account /* класс, сгенерированый из idl-
 {
 public:
   Account_impl (char*, CORBA::UShort, CORBA::Float);
+	~Account_impl ();
 
   void deposit (CORBA::Float);
   void withdraw (CORBA::Float);
   CORBA::Float balance () const;
-	void login (char*, CORBA::UShort) const;
+	CORBA::Boolean login (char*, CORBA::UShort) const;
 	void send (char*);
 
 private:
-  CORBA::Float bal;
+  CORBA::Float balance;
 	char* cardNum
-	unsigned short pin;
+	CORBA::UShort pin;
 };
 
 /* конструктор */
-Account_impl::Account_impl ()
+Account_impl::Account_impl (char* _cardNum, CORBA::UShort _pin, CORBA::Float _balance)
 {
-  bal = 0;
+	balance = _balance;
+	cardNum = new char[12];
+	cardNum = _cardNum;
+	pin = _pin;
+}
+
+Account_impl::~Account_impl ()
+{
+	delete cardNum;
 }
 
 /* функция внесения депозита */ 
-void Account_impl::deposit (CORBA::ULong amount)
+void Account_impl::deposit (CORBA::Float amount)
 {
-  bal += amount;
+  balance += amount;
 }
 
 /* функция снятия наличных */ 
-void Account_impl::withdraw (CORBA::ULong amount)
+void Account_impl::withdraw (CORBA::Float amount)
 {
-  bal -= amount;
+  balance -= amount;
 }
-CORBA::Long Account_impl::balance ()
+CORBA::Float Account_impl::balance ()
 {
   return bal;
+}
+CORBA::Boolean login (char* cardNum, CORBA::UShort pin)
+{
+	regex reg("^[0-9]{12}$");
+	if (!std::regex_match(cardNum, reg))
+		return false;
 }
 
 /* реализация интерфейса Bank */

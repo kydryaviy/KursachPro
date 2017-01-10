@@ -1,75 +1,90 @@
 #include <CORBA.h>
 #include <coss/CosNaming.h>
 #include "account.h"
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xos.h>
-#include <stdio.h>
 #include <string>
-#include <cstdlib>
-#include <sstream>
-
-#define X 0
-#define Y 0
-#define WIDTH 200
-#define HEIGHT 200
-#define WIDTH_MIN 200
-#define HEIGHT_MIN 200
-#define BORDER_WIDTH 5
-#define TITLE "ATM"
-#define ICON_TITLE "ATM"
-#define PRG_CLASS "ATM"
+#include <regex>
 
 using namespace std;
 
-static void SetWindowManagerHints ( 
- Display * display, 		/*Указатель на структуру Display */
- char * PClass, 		/*Класс программы */
- char * argv[],   		/*Аргументы программы */
- int argc,    			/*Число аргументов */
- Window window,    		/*Идентификатор окна */
- int x,     			/*Координаты левого верхнего */
- int y,	   				/*угла окна */
- int win_wdt,			/*Ширина  окна */
- int win_hgt,  			/*Высота окна */
- int win_wdt_min,			/*Минимальная ширина окна */
- int win_hgt_min, 		/*Минимальная высота окна */
- char * ptrTitle,  		/*Заголовок окна */
- char * ptrITitle,	/*Заголовок пиктограммы окна */
- Pixmap pixmap 	/*Рисунок пиктограммы */
-)
+bool yesOrNo()
 {
- XSizeHints size_hints; /*Рекомендации о размерах окна*/
-
- XWMHints wm_hints;
- XClassHint class_hint;
- XTextProperty windowname, iconname;
-
- if ( !XStringListToTextProperty (&ptrTitle, 1, &windowname ) ||
-    !XStringListToTextProperty (&ptrITitle, 1, &iconname ) ) {
-  puts ( "No memory!\n");
-  exit ( 1 );
+	char c;
+	cout << "Y/N?" << endl;
+	cin >> c;
+	switch(c)
+	{
+	case 'y':	
+	case 'Y':
+		return true;
+	case 'n':
+	case 'N':
+		return false;
+	default:
+		cout << "Try again"	<< endl;
+		yesOrNo();
+	}
 }
 
-size_hints.flags = PPosition | PMinSize | PMaxSize;
-size_hints.min_width = win_wdt_min;
-size_hints.min_height = win_hgt_min;
+void work(Account_var account)
+{
+	system("clear");
+}
 
-size_hints.max_width = win_wdt_min;
-size_hints.max_height = win_hgt_min;
-XSetWMNormalHints(display, window, &size_hints);
+bool login(Account_var account)
+{
+	system("clear");
+	string sPin;
+	cout << "Input your PIN" << endl;
+	cin >> sPin;
+	regex regPin("^[0-9]{4}$");
+	if (!regex_match(sPin, regPin))
+	{
+		cout << "Invalid pin, try again?" << endl;
+		if (yesOrNo())
+			login(account);
+	}
+	else
+	{
+		if (account->login((unsigned short)strtoul(sPin.c_str(),NULL,0)))
+			return true;
+		else
+		{
+			cout << "Wrong pin, try again?" << endl;
+			if (yesOrNo())
+				login(account);
+			else
+				return false;
+		}
+	}
+}
 
-wm_hints.flags = StateHint | IconPixmapHint | InputHint;
-wm_hints.initial_state = NormalState;
-wm_hints.input = True;
-wm_hints.icon_pixmap= pixmap;
-class_hint.res_name = argv[0];
-class_hint.res_class = PClass;
-
-XSetWMProperties ( display, window, &windowname,
-  &iconname, argv, argc, &size_hints, &wm_hints,
-  &class_hint );
-  
+void begin(Bank_var bank, string startStr = "")
+{
+	system("clear");
+	if (startStr.length() != 0)
+	{
+		cout << startStr << endl;
+	}
+	string sCardNum;
+	cout << "Input your card number:" << endl;
+	cin >> sCardNum;
+	regex regCard("^[0-9]{16}$");
+	if (!regex_match(sCardNum, regCard))
+		begin(bank, "Invalid card number");
+	else
+	{	
+		Account_var account;
+		account = bank->getAccount(sCardNum.c_str());
+		if (account == nullptr)
+			begin(bank, "There is no such card in this bank");
+		else
+		{
+			if (login(account))
+				work(account);
+			else
+				begin(bank);
+		}
+	}
 }
 
 int main (int argc, char *argv[])
@@ -123,84 +138,10 @@ int main (int argc, char *argv[])
 /* Служба именования вовзращает ссылку как CORBA::Object. Для приведения типов используется метод _narrow() */
   Bank_var bank = Bank::_narrow (obj);
 
-  /* получение объекта Account */
-  Account_var account = bank->create ();
-
-  if (CORBA::is_nil (account)) 
-  {
-    printf ("oops: account is nil\n");
-    exit (1);
-  }
-
-  /* выполнение операций с объектом Account и вывод результатов */
-  account->deposit (700);
-  account->withdraw (450);
-  		 
-  	 string balance = "Your balance is: ";	 
-		 stringstream ss;
-		 ss << account->balance();
-		 balance += ss.str();
-		 
-
-	 Display * display;  /* Указатель на структуру Display */
- int ScreenNumber;    /* Номер экрана */
- GC gc;				/* Графический контекст */
- XEvent report;
- Window window;
-
- /* Устанавливаем связь с сервером */
- if ( ( display = XOpenDisplay ( NULL ) ) == NULL ) {
-  puts ("Can not connect to the X server!\n");
-  exit ( 1 );
- }
-
- /* Получаем номер основного экрана */
- ScreenNumber = DefaultScreen ( display );
-
- /* Создаем окно */
- window = XCreateSimpleWindow ( display,
-     RootWindow ( display, ScreenNumber ),
-     X, Y, WIDTH, HEIGHT, BORDER_WIDTH,
-     BlackPixel ( display, ScreenNumber ),
-     WhitePixel ( display, ScreenNumber ) );
-
- /* Задаем рекомендации для менеджера окон */
- SetWindowManagerHints ( display, PRG_CLASS, argv, argc,
-   window, X, Y, WIDTH, HEIGHT, WIDTH_MIN,
-   HEIGHT_MIN, TITLE, ICON_TITLE, 0 );
-
- /* Выбираем события,  которые будет обрабатывать программа */
- XSelectInput ( display, window, ExposureMask | KeyPressMask );
-
- /* Покажем окно */
- XMapWindow ( display, window );
-
- /* Создадим цикл получения и обработки ошибок */
- while ( 1 ) {
-  XNextEvent ( display, &report );
-
-  switch ( report.type ) {
-    case Expose :
-     /* Запрос на перерисовку */
-     if ( report.xexpose.count != 0 )
-      break;
-
-     gc = XCreateGC ( display, window, 0 , NULL );
-		 
-     XSetForeground ( display, gc, BlackPixel ( display, 0) );
-     XDrawString ( display, window, gc, 20,50,
-       balance.c_str(), strlen ( balance.c_str() ) );
-     XFreeGC ( display, gc );
-     XFlush(display);
-     break;
-
-    case KeyPress :
-     /* Выход нажатием клавиши клавиатуры */
-     XCloseDisplay ( display );
-     exit ( 0 );
-  //printf ("Balance is %ld.\n", account->balance ());
+  /* получение объекта Account */	
+	begin(bank);
+	
+	
 
   return 0;
-}
-}
 }

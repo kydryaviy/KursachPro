@@ -33,8 +33,9 @@ private:
 Account_impl::Account_impl (const char* _cardNum, CORBA::UShort _pin, CORBA::Long _balance)
 {
 	balance = _balance;
-	cardNum = new char[12];
-	cardNum = (char*)_cardNum;
+	cardNum = new char[20];
+	strcpy(cardNum,_cardNum);
+	//cardNum = (char*)_cardNum;
 	pin = _pin;
 }
 
@@ -84,14 +85,13 @@ public:
 	char* getName ();
 private:
 	char* bankName;
-  vector<Account_ptr> accounts;
+  vector<Account_impl*> accounts;
 };
 
 Bank_impl::Bank_impl (const char* _bankName)
 {
-	int length = strlen(_bankName);
-	bankName = new char[length];
-	bankName = (char*)_bankName;
+	bankName = new char[20];
+	strcpy(bankName,_bankName);
 }
 
 Bank_impl::~Bank_impl ()
@@ -102,11 +102,16 @@ Bank_impl::~Bank_impl ()
 Account_ptr Bank_impl::getAccount (const char* cardNum)
 {
 	Account_ptr account = nullptr;
-	for_each(accounts.begin(),accounts.end(),[cardNum, &account](Account_ptr acc)
+	for_each(accounts.begin(),accounts.end(),[cardNum, &account](Account_impl* acc)
 	{
 		if (!strcmp(acc->getCardNum(), cardNum))
-			account = acc; 
+		{
+			
+			account = acc->_this ();
+			//account = acc; 
+		}
 	});
+	
 	return account;
 }
 
@@ -117,11 +122,15 @@ void Bank_impl::createAccount(const char* cardNum, CORBA::UShort pin, CORBA::Lon
   Account_impl * ai = new Account_impl(cardNum, pin, balance);
 
 /*получить ссылку на новый объект используя метод _this() -  активизация службы подсчёта ссылок для этого объекта */
-  Account_ptr aref = ai->_this ();
-  assert (!CORBA::is_nil (aref));
-
+  //Account_ptr aref = ai->_this ();
+  //assert (!CORBA::is_nil (aref));
   /* возврат ссылки на объект */
-  accounts.push_back(aref);
+  accounts.push_back(ai);
+	for_each(accounts.begin(),accounts.end(),[](Account_impl* acc)
+	{
+		cout << acc->getCardNum() << endl;
+	});
+	cout << endl;
 }
 
 char* Bank_impl::getName ()

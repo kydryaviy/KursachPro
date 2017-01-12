@@ -129,12 +129,6 @@ void Bank_impl::createAccount(const char* cardNum, CORBA::UShort pin, CORBA::Lon
   //assert (!CORBA::is_nil (aref));
   /* возврат ссылки на объект */
   accounts.push_back(ai);
-	for_each(accounts.begin(),accounts.end(),[](Account_impl* acc)
-	{
-		cout << acc->getCardNum() << endl;
-    cout << acc->getBalance() << endl;
-	});
-	cout << endl;
 }
 
 char* Bank_impl::getName ()

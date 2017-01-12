@@ -141,9 +141,6 @@ void begin()
 
 int main (int argc, char *argv[])
 {
-	cout << "Input bank name" << endl;
-	char* bankName = new char[30];
-	cin >> bankName;
   // инициализация ORB
   CORBA::ORB_var orb = CORBA::ORB_init (argc, argv);
 

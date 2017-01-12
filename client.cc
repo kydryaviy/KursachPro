@@ -7,7 +7,7 @@
 using namespace std;
 
 void begin();
-Bank_var bank;
+char* bankName;
 vector<string> bankNames;
 vector<Bank_var> banks;
 
@@ -124,7 +124,7 @@ void begin()
 	else
 	{
 		Account_var account;
-		account = bank->getAccount(sCardNum.c_str());
+		account = banks[0]->getAccount(sCardNum.c_str());
 		if (account == nullptr)
 		{
 			cout << "There is no such card in this bank" << endl;
@@ -140,32 +140,11 @@ void begin()
 		}
 	}
 }
-
-int main (int argc, char *argv[])
+void addBanksToVector(string bName, CosNaming::NamingContext_var nc)
 {
-	bankNames.push_back("Privat");
-	bankNames.push_back("Sberbank");
-	bankNames.push_back("ProstoBank");
-	cout << "Input bank name" << endl;
-	char* bankName = new char[30];
-	cin >> bankName;
-  // инициализация ORB
-  CORBA::ORB_var orb = CORBA::ORB_init (argc, argv);
-
-  /* получение ссылки на Службу Именования */
-  CORBA::Object_var nsobj = orb->resolve_initial_references ("NameService");
-  CosNaming::NamingContext_var nc = CosNaming::NamingContext::_narrow (nsobj);
-
-  if (CORBA::is_nil (nc))
-  {
-    cerr << "oops, I cannot access the Naming Service!" << endl;
-    exit (1);
-  }
-
-  /* создание имени Службы Именования для объекта “банк” */
-  CosNaming::Name name;
+	CosNaming::Name name;
   name.length (1);
-  name[0].id = CORBA::string_dup (bankName);
+  name[0].id = CORBA::string_dup (bName.c_str());
   name[0].kind = CORBA::string_dup ("");
 
   /* попытка получения узла в дереве Службы Именования */
@@ -196,7 +175,33 @@ int main (int argc, char *argv[])
   cout << "done." << endl;
 
 /* Служба именования вовзращает ссылку как CORBA::Object. Для приведения типов используется метод _narrow() */
-  bank = Bank::_narrow (obj);
+  banks.push_back(Bank::_narrow (obj));
+}
+int main (int argc, char *argv[])
+{
+	bankNames.push_back("Privat");
+	bankNames.push_back("Sberbank");
+	bankNames.push_back("ProstoBank");
+	cout << "Input bank name" << endl;
+	bankName = new char[30];
+	cin >> bankName;
+  // инициализация ORB
+  CORBA::ORB_var orb = CORBA::ORB_init (argc, argv);
+
+  /* получение ссылки на Службу Именования */
+  CORBA::Object_var nsobj = orb->resolve_initial_references ("NameService");
+  CosNaming::NamingContext_var nc = CosNaming::NamingContext::_narrow (nsobj);
+
+  if (CORBA::is_nil (nc))
+  {
+    cerr << "oops, I cannot access the Naming Service!" << endl;
+    exit (1);
+  }
+
+  for (int i = 0; i < bankNames.size(); ++i)
+	{
+		addBanksToVector(bankNames[i].c_str(), nc);
+	}
 
   /* получение объекта Account */
 	begin();

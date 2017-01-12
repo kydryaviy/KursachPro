@@ -59,23 +59,23 @@ void work(Account_var account, bool isThisBank)
 		system("clear");
 		cout << account->getBalance() << endl;
 		cin.ignore().get();
-		work(account);
+		work(account, isThisBank);
 		break;
 	case 2:
 		amount = inputMoney();
 		account->withdraw(amount);
-		work(account);
+		work(account, isThisBank);
 		break;
 	case 3:
 		amount = inputMoney();
 		account->deposit(amount);
-		work(account);
+		work(account, isThisBank);
 		break;
 	case 0:
 		begin();
 		break;
 	default:
-		work(account);
+		work(account, isThisBank);
 		break;
 	}
 }
@@ -212,7 +212,7 @@ int main (int argc, char *argv[])
 	}
 	for(int i = 0; i < banks.size(); ++i)
 	{
-		if (bankName == banks[i].getName())
+		if (bankName == banks[i]->getName())
 			currentBank = banks[i];
 	}
   /* получение объекта Account */

@@ -7,8 +7,8 @@
 using namespace std;
 
 void begin();
-char* bankName;
 vector<string> bankNames;
+Bank_var currentBank;
 vector<Bank_var> banks;
 
 bool yesOrNo()
@@ -46,7 +46,7 @@ long inputMoney()
 	}
 }
 
-void work(Account_var account)
+void work(Account_var account, bool isThisBank)
 {
 	system("clear");
 	cout << "1.Check balance\n2.Withdraw money\n3.Deposit money\n0.Exit\n";
@@ -124,17 +124,25 @@ void begin()
 	else
 	{
 		Account_var account;
-		account = banks[0]->getAccount(sCardNum.c_str());
+		account = currentBank->getAccount(sCardNum.c_str());
 		if (account == nullptr)
 		{
-			cout << "There is no such card in this bank" << endl;
-			cin.ignore().get();
-			begin();
+			for (int i = 0; i < banks.size(); ++i)
+			{
+				if (banks[i]->getAccount(sCardNum.c_str()) != nullptr)
+				{
+					account = banks[i]->getAccount(sCardNum.c_str());
+					if (login(account))
+						work(account,false);
+					else
+						begin();
+				}
+			}
 		}
 		else
 		{
 			if (login(account))
-				work(account);
+				work(account, true);
 			else
 				begin();
 		}
@@ -183,7 +191,7 @@ int main (int argc, char *argv[])
 	bankNames.push_back("Sberbank");
 	bankNames.push_back("ProstoBank");
 	cout << "Input bank name" << endl;
-	bankName = new char[30];
+	char* bankName = new char[30];
 	cin >> bankName;
   // инициализация ORB
   CORBA::ORB_var orb = CORBA::ORB_init (argc, argv);
@@ -202,7 +210,11 @@ int main (int argc, char *argv[])
 	{
 		addBanksToVector(bankNames[i].c_str(), nc);
 	}
-
+	for(int i = 0; i < banks.size(); ++i)
+	{
+		if (bankName == banks[i].getName())
+			currentBank = banks[i];
+	}
   /* получение объекта Account */
 	begin();
 

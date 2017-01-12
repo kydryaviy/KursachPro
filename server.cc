@@ -181,12 +181,24 @@ void rewriteFile(Account_impl* acc)
 		vector<string> v = splitString(s);
 		if (!strcmp(acc->getCardNum(),v[1].c_str()))
 		{
-			v[3] = acc->getBalance();
+			v[3] = to_string(acc->getBalance());
 			s = "";
 			for (int i = 0; i < 4; ++i)
+      {
 				s += v[i];
+        if (i != 3)
+          s += " ";
+      }
 		}
 	});
+
+  ofstream file("accounts.txt");
+  for (int i = 0; i < stringsFromFile.size(); ++i)
+  {
+    file << stringsFromFile[i];
+    if (i != stringsFromFile.size() - 1)
+      file << endl;
+  }
 }
 
 int main (int argc, char *argv[])
@@ -235,7 +247,7 @@ int main (int argc, char *argv[])
   /* регистрация имени для банка в Службе Именования */
   CosNaming::Name name;
   name.length (1);
-  name[0].id = CORBA::string_dup (bankName);
+  name[0].id = CORBA::string_dup ("Bank");
   name[0].kind = CORBA::string_dup ("");
 
   /* сохранение ссылки на объект банка в Службе Именования */

@@ -8,8 +8,6 @@ using namespace std;
 
 void begin();
 Bank_var bank;
-vector<string> bankNames;
-vector<Bank_var> banks;
 
 bool yesOrNo()
 {
@@ -143,9 +141,6 @@ void begin()
 
 int main (int argc, char *argv[])
 {
-	bankNames.push_back("Privat");
-	bankNames.push_back("Sberbank");
-	bankNames.push_back("ProstoBank");
 	cout << "Input bank name" << endl;
 	char* bankName = new char[30];
 	cin >> bankName;
@@ -165,7 +160,7 @@ int main (int argc, char *argv[])
   /* создание имени Службы Именования для объекта “банк” */
   CosNaming::Name name;
   name.length (1);
-  name[0].id = CORBA::string_dup (bankName);
+  name[0].id = CORBA::string_dup ("Bank");
   name[0].kind = CORBA::string_dup ("");
 
   /* попытка получения узла в дереве Службы Именования */

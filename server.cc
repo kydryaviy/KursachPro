@@ -8,9 +8,10 @@
 #include <fstream>
 
 using namespace std;
-
+class Account_impl;
+void rewriteFile(Account_impl*);
 /* реализация интерфейса Account (описание его функциональности) */
-class Account_impl : 
+class Account_impl :
 virtual public POA_Account /* класс, сгенерированый из idl-файла */
 {
 public:
@@ -44,16 +45,18 @@ Account_impl::~Account_impl ()
 	delete cardNum;
 }
 
-/* функция внесения депозита */ 
+/* функция внесения депозита */
 void Account_impl::deposit (CORBA::Long amount)
 {
   balance += amount;
+  rewriteFile(this);
 }
 
-/* функция снятия наличных */ 
+/* функция снятия наличных */
 void Account_impl::withdraw (CORBA::Long amount)
 {
   balance -= amount;
+  rewriteFile(this);
 }
 
 CORBA::Long Account_impl::getBalance ()
@@ -106,12 +109,12 @@ Account_ptr Bank_impl::getAccount (const char* cardNum)
 	{
 		if (!strcmp(acc->getCardNum(), cardNum))
 		{
-			
+
 			account = acc->_this ();
-			//account = acc; 
+			//account = acc;
 		}
 	});
-	
+
 	return account;
 }
 
@@ -129,6 +132,7 @@ void Bank_impl::createAccount(const char* cardNum, CORBA::UShort pin, CORBA::Lon
 	for_each(accounts.begin(),accounts.end(),[](Account_impl* acc)
 	{
 		cout << acc->getCardNum() << endl;
+    cout << acc->getBalance() << endl;
 	});
 	cout << endl;
 }
@@ -138,24 +142,58 @@ char* Bank_impl::getName ()
 	return bankName;
 }
 
-void addAccIfThisBank(Bank_impl* bank, string data)
+vector<string> splitString(string str)
 {
 	vector<string> v;
-	istringstream f(data);
+	istringstream f(str);
 	string s;
 	while (getline(f,s,' '))
 	{
 		v.push_back(s);
 	}
+  return v;
+}
+
+void addAccIfThisBank(Bank_impl* bank, string data)
+{
+	vector<string> v = splitString(data);
 	if (!strcmp(bank->getName(),v[0].c_str()))
-		bank->createAccount(v[1].c_str(),(unsigned short) strtoul(v[2].c_str(), NULL, 0),(long)v[3].c_str());
+		bank->createAccount(v[1].c_str(),(unsigned short) strtoul(v[2].c_str(), NULL, 0),stol(v[3]));
+}
+
+vector<string> readFile()
+{
+	vector<string> stringsFromFile;
+	string str;
+	ifstream file("accounts.txt");
+	while (getline(file, str))
+	{
+		stringsFromFile.push_back(str);
+	}
+	return stringsFromFile;
+}
+
+void rewriteFile(Account_impl* acc)
+{
+	vector<string> stringsFromFile = readFile();
+	for_each(stringsFromFile.begin(),stringsFromFile.end(),[acc](string &s)
+	{
+		vector<string> v = splitString(s);
+		if (!strcmp(acc->getCardNum(),v[1].c_str()))
+		{
+			v[3] = acc->getBalance();
+			s = "";
+			for (int i = 0; i < 4; ++i)
+				s += v[i];
+		}
+	});
 }
 
 int main (int argc, char *argv[])
 {
-  /* инициализация ORB, получение Root POA объекта и регистрация */  
+  /* инициализация ORB, получение Root POA объекта и регистрация */
   CORBA::ORB_var orb = CORBA::ORB_init (argc, argv);
-  
+
   /* получение ссылки на RootPOA и его менеджера */
   CORBA::Object_var poaobj = orb->resolve_initial_references ("RootPOA");
   PortableServer::POA_var poa = PortableServer::POA::_narrow (poaobj);
@@ -170,13 +208,7 @@ int main (int argc, char *argv[])
 
 
 
-	vector<string> stringsFromFile;
-	string str;
-	ifstream file("accounts.txt");
-	while (getline(file, str))
-	{
-		stringsFromFile.push_back(str);
-	}
+	vector<string> stringsFromFile = readFile();
 	for_each(stringsFromFile.begin(),stringsFromFile.end(),[&micocash](string s)
 	{
 		addAccIfThisBank(micocash, s);
@@ -194,7 +226,7 @@ int main (int argc, char *argv[])
   CORBA::Object_var nsobj = orb->resolve_initial_references ("NameService");
   CosNaming::NamingContext_var nc = CosNaming::NamingContext::_narrow (nsobj);
 
-  if (CORBA::is_nil (nc)) 
+  if (CORBA::is_nil (nc))
   {
     cerr << "oops, I cannot access the Naming Service!" << endl;
     exit (1);
@@ -203,9 +235,9 @@ int main (int argc, char *argv[])
   /* регистрация имени для банка в Службе Именования */
   CosNaming::Name name;
   name.length (1);
-  name[0].id = CORBA::string_dup ("Bank");
+  name[0].id = CORBA::string_dup (bankName);
   name[0].kind = CORBA::string_dup ("");
-  
+
   /* сохранение ссылки на объект банка в Службе Именования */
   cout << "Binding Bank in the Naming Service ... " << flush;
   nc->rebind (name, ref);
@@ -221,6 +253,6 @@ int main (int argc, char *argv[])
   poa->destroy (TRUE, TRUE);
   delete micocash;
 	delete bankName;
-
+	cout << "EXITING" << endl;
   return 0;
 }

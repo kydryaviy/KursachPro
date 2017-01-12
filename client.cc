@@ -6,6 +6,11 @@
 
 using namespace std;
 
+void begin();
+Bank_var bank;
+vector<string> bankNames;
+vector<Bank_var> banks;
+
 bool yesOrNo()
 {
 	char c;
@@ -13,7 +18,7 @@ bool yesOrNo()
 	cin >> c;
 	switch(c)
 	{
-	case 'y':	
+	case 'y':
 	case 'Y':
 		return true;
 	case 'n':
@@ -25,9 +30,54 @@ bool yesOrNo()
 	}
 }
 
+long inputMoney()
+{
+	string amount;
+	regex regMoney("^[0-9]+$");
+	cout << "Input amount of money:" << endl;
+	cin >> amount;
+	if (!regex_match(amount, regMoney))
+	{
+		return 0l;
+	}
+	else
+	{
+		return stol(amount);
+	}
+}
+
 void work(Account_var account)
 {
 	system("clear");
+	cout << "1.Check balance\n2.Withdraw money\n3.Deposit money\n0.Exit\n";
+	short option;
+	cin >> option;
+	long amount = 0l;
+	switch(option)
+	{
+	case 1:
+		system("clear");
+		cout << account->getBalance() << endl;
+		cin.ignore().get();
+		work(account);
+		break;
+	case 2:
+		amount = inputMoney();
+		account->withdraw(amount);
+		work(account);
+		break;
+	case 3:
+		amount = inputMoney();
+		account->deposit(amount);
+		work(account);
+		break;
+	case 0:
+		begin();
+		break;
+	default:
+		work(account);
+		break;
+	}
 }
 
 bool login(Account_var account)
@@ -58,45 +108,55 @@ bool login(Account_var account)
 	}
 }
 
-void begin(Bank_var bank, string startStr = "")
+void begin()
 {
 	system("clear");
-	if (startStr.length() != 0)
-	{
-		cout << startStr << endl;
-	}
 	string sCardNum;
 	cout << "Input your card number:" << endl;
 	cin >> sCardNum;
 	regex regCard("^[0-9]{16}$");
 	if (!regex_match(sCardNum, regCard))
-		begin(bank, "Invalid card number");
+	{
+		cout << "Invalid card number" << endl;
+		cin.ignore().get();
+		begin();
+	}
 	else
-	{	
+	{
 		Account_var account;
 		account = bank->getAccount(sCardNum.c_str());
 		if (account == nullptr)
-			begin(bank, "There is no such card in this bank");
+		{
+			cout << "There is no such card in this bank" << endl;
+			cin.ignore().get();
+			begin();
+		}
 		else
 		{
 			if (login(account))
 				work(account);
 			else
-				begin(bank);
+				begin();
 		}
 	}
 }
 
 int main (int argc, char *argv[])
 {
+	bankNames.push_back("Privat");
+	bankNames.push_back("Sberbank");
+	bankNames.push_back("ProstoBank");
+	cout << "Input bank name" << endl;
+	char* bankName = new char[30];
+	cin >> bankName;
   // инициализация ORB
   CORBA::ORB_var orb = CORBA::ORB_init (argc, argv);
-  
+
   /* получение ссылки на Службу Именования */
   CORBA::Object_var nsobj = orb->resolve_initial_references ("NameService");
   CosNaming::NamingContext_var nc = CosNaming::NamingContext::_narrow (nsobj);
 
-  if (CORBA::is_nil (nc)) 
+  if (CORBA::is_nil (nc))
   {
     cerr << "oops, I cannot access the Naming Service!" << endl;
     exit (1);
@@ -105,9 +165,9 @@ int main (int argc, char *argv[])
   /* создание имени Службы Именования для объекта “банк” */
   CosNaming::Name name;
   name.length (1);
-  name[0].id = CORBA::string_dup ("Bank");
+  name[0].id = CORBA::string_dup (bankName);
   name[0].kind = CORBA::string_dup ("");
-  
+
   /* попытка получения узла в дереве Службы Именования */
   CORBA::Object_var obj;
 
@@ -136,12 +196,12 @@ int main (int argc, char *argv[])
   cout << "done." << endl;
 
 /* Служба именования вовзращает ссылку как CORBA::Object. Для приведения типов используется метод _narrow() */
-  Bank_var bank = Bank::_narrow (obj);
+  bank = Bank::_narrow (obj);
 
-  /* получение объекта Account */	
-	begin(bank);
-	
-	
+  /* получение объекта Account */
+	begin();
+
+
 
   return 0;
 }
